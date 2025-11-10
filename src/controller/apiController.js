@@ -20,10 +20,73 @@ export const createPost = async (req, res) => {
   }
 };
 
-export const gettAllPost = (req, res) => {};
+export const gettAllPost = async (req, res) => {
+  try {
+    const searchTerm = req.query.term;
 
-export const getPost = (req, res) => {};
+    let query = {};
 
-export const updatePost = (req, res) => {};
+    if (searchTerm) {
+      query = {
+        $or: [
+          { title: { $regex: searchTerm, $options: "i" } },
+          { content: { $regex: searchTerm, $options: "i" } },
+          { category: { $regex: searchTerm, $options: "i" } },
+        ],
+      };
+    }
 
-export const delPost = (req, res) => {};
+    const posts = await Post.find(query);
+    res.status(200).json(posts);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const getPost = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const post = await Post.findById(id);
+    if (post) {
+      return res.status(200).json(post);
+    }
+    return res
+      .status(404)
+      .json({ message: "Không tìm thấy bài post với ID này." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updatePost = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const updates = req.body;
+    const updatePost = await Post.findByIdAndUpdate(id, updates, { new: true });
+    if (updatePost) {
+      return res.status(200).json(updatePost);
+    }
+
+    return res
+      .status(404)
+      .json({ message: "Không tìm thấy bài post với ID này." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const delPost = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const delPost = await Post.findByIdAndDelete(id);
+    if (delPost) {
+      return res.status(200).json(delPost);
+    }
+
+    return res
+      .status(404)
+      .json({ message: "Không tìm thấy bài post với ID này." });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
